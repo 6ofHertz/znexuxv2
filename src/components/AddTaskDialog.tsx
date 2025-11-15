@@ -46,7 +46,8 @@ export const AddTaskDialog = ({ open, onOpenChange, onTaskCreated, preselectedSt
       try {
         setLoadingStreams(true);
         const streamsData = await getStreams(user.uid);
-        setStreams(streamsData);
+        // Limit to first 5 streams
+        setStreams(streamsData.slice(0, 5));
       } catch (error) {
         console.error("Error fetching streams:", error);
         toast.error("Failed to load streams");
@@ -182,7 +183,7 @@ export const AddTaskDialog = ({ open, onOpenChange, onTaskCreated, preselectedSt
                 <SelectTrigger id="stream">
                   <SelectValue placeholder="Select a stream..." />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background/95 backdrop-blur-md border-border">
                   {streams.map(stream => (
                     <SelectItem key={stream.id} value={stream.name}>
                       <div className="flex items-center gap-2">
@@ -218,7 +219,7 @@ export const AddTaskDialog = ({ open, onOpenChange, onTaskCreated, preselectedSt
                 <SelectTrigger id="priority">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background/95 backdrop-blur-md border-border">
                   <SelectItem value="low">
                     <span className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-blue-500" />

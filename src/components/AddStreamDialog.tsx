@@ -121,7 +121,7 @@ export const AddStreamDialog = ({ open, onOpenChange, onStreamCreated }: AddStre
               <SelectTrigger id="type">
                 <SelectValue placeholder="Select a stream type..." />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-background/95 backdrop-blur-md border-border">
                 {streamTypes.map(type => (
                   <SelectItem key={type.value} value={type.value}>
                     {type.label}
