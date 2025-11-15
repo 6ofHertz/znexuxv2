@@ -122,4 +122,29 @@
   .sidebar-item.active {
     @apply bg-accent font-medium;
   }
+
+  /* Trophy Shelf Animations */
+  @keyframes shine {
+    0% {
+      transform: translateX(-100%) skewX(-15deg);
+    }
+    100% {
+      transform: translateX(200%) skewX(-15deg);
+    }
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Gold glow effect for ZURVAN logo */
+  .gold-glow {
+    text-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+  }
 }

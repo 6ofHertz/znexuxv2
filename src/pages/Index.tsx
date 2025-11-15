@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { StreamOverviewCard } from "@/components/StreamOverviewCard";
+import { TrophyStreamCard } from "@/components/TrophyStreamCard";
 import { AnalyticsHub } from "@/components/AnalyticsHub";
 import { ExecutionZone } from "@/components/ExecutionZone";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { SeedDataButton } from "@/components/SeedDataButton";
 import { Button } from "@/components/ui/button";
-import { Calendar, BarChart3, Upload, LogOut, Shield, Sparkles } from "lucide-react";
+import { Calendar, BarChart3, Upload, LogOut, Shield, Sparkles, Trophy } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdmin } from "@/hooks/useAdmin";
 import { getTasks, getStreams, updateTask } from "@/lib/firebase/firestore";
@@ -196,9 +196,9 @@ const Index = () => {
       </nav>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
+      <div className="max-w-[1800px] mx-auto px-4 md:px-8 py-8">
         {/* Hero Section */}
-        <div className="mb-8 text-center space-y-3">
+        <div className="mb-12 text-center space-y-3">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-2">
             <Sparkles className="h-4 w-4" />
             Instant Orientation → Deep Insight → Actionable Tasks
@@ -220,48 +220,62 @@ const Index = () => {
 
         {streams.length > 0 && (
           <>
-            {/* ========== TOP SECTION: LEARNING STREAMS OVERVIEW ========== */}
-            <section className="mb-12">
-              <div className="text-center mb-6">
-                <h2 className="text-2xl font-display font-bold text-foreground mb-2">
-                  Learning Streams Overview
-                </h2>
+            {/* ========== TROPHY SHELF: LEARNING STREAMS SHOWCASE ========== */}
+            <section className="mb-16">
+              <div className="text-center mb-12">
+                <div className="inline-flex items-center gap-2 mb-3">
+                  <Trophy className="h-6 w-6 text-amber-500" />
+                  <h2 className="text-3xl font-display font-bold text-foreground">
+                    Learning Streams Overview
+                  </h2>
+                  <Trophy className="h-6 w-6 text-amber-500" />
+                </div>
                 <p className="text-muted-foreground text-sm">
-                  Comprehensive view of all 5 learning streams with categorized data
+                  Your 5 mastery streams — displayed as trophies in your learning showcase
                 </p>
               </div>
 
-              {/* Grid of stream cards - now showing full details */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5 gap-6">
-                {uniqueStreams.map((stream) => {
-                  const streamName = stream.name || (stream as any).title || 'Unnamed Stream';
-                  const streamTasks = tasks.filter(t => 
-                    t.stream === stream.name || 
-                    t.stream === (stream as any).title || 
-                    t.stream === stream.id
-                  );
-                  const inProgressTasks = streamTasks.filter(t => !t.completed).length;
-                  const completedTasks = streamTasks.filter(t => t.completed).length;
-                  const nextTask = streamTasks.find(t => !t.completed);
+              {/* Trophy Shelf - Horizontal Scrollable Container */}
+              <div className="relative">
+                {/* Gradient Edges for depth */}
+                <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+                <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+                
+                {/* Scrollable Trophy Container */}
+                <div className="overflow-x-auto pb-8 px-4 scrollbar-hide">
+                  <div className="flex gap-8 justify-center items-start min-w-max py-8">
+                    {uniqueStreams.map((stream, index) => {
+                      const streamName = stream.name || (stream as any).title || 'Unnamed Stream';
+                      const streamTasks = tasks.filter(t => 
+                        t.stream === stream.name || 
+                        t.stream === (stream as any).title || 
+                        t.stream === stream.id
+                      );
+                      const inProgressTasks = streamTasks.filter(t => !t.completed).length;
+                      const completedTasks = streamTasks.filter(t => t.completed).length;
+                      const nextTask = streamTasks.find(t => !t.completed);
 
-                  return (
-                    <div key={stream.id}>
-                      <StreamOverviewCard
-                        id={stream.id}
-                        name={streamName}
-                        description={stream.description}
-                        category={stream.category}
-                        progress={stream.progress || 0}
-                        color={stream.color || '#888888'}
-                        tasksInProgress={inProgressTasks}
-                        completedTasks={completedTasks}
-                        totalTasks={streamTasks.length}
-                        nextItem={nextTask?.title}
-                        onClick={() => handleStreamClick(stream.id)}
-                      />
-                    </div>
-                  );
-                })}
+                      return (
+                        <TrophyStreamCard
+                          key={stream.id}
+                          stream={stream}
+                          tasksInProgress={inProgressTasks}
+                          completedTasks={completedTasks}
+                          nextTask={nextTask?.title}
+                          onClick={() => handleStreamClick(stream.id)}
+                          index={index}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Shelf Base - Visual Element */}
+                <div className="relative mt-4">
+                  <div className="h-4 bg-gradient-to-b from-muted/50 to-muted rounded-t-lg border-t-2 border-border shadow-lg" />
+                  <div className="h-8 bg-gradient-to-b from-muted to-muted/80 border-x-2 border-b-2 border-border shadow-xl" />
+                  <div className="absolute -bottom-2 left-0 right-0 h-3 bg-gradient-to-b from-muted/60 to-transparent blur-sm" />
+                </div>
               </div>
             </section>
 
