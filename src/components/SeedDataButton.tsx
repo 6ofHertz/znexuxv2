@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { seedStreams } from '../lib/firebase/seedData';
+import { seedStreamsWithTasks } from '../lib/firebase/seedData';
 import { Button } from './ui/button';
 import { Loader2, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
 
@@ -22,14 +22,14 @@ export function SeedDataButton() {
     setMessage('');
 
     try {
-      console.log('🌱 Starting data seeding...');
+      console.log('🌱 Starting comprehensive data seeding...');
       
-      // Seed streams
-      setMessage('Creating your 5 learning streams...');
-      const streams = await seedStreams(user.uid);
+      // Seed streams with all categorized tasks
+      setMessage('Creating your 5 learning streams with all tasks...');
+      const result = await seedStreamsWithTasks(user.uid);
 
       setStatus('success');
-      setMessage(`✅ Successfully seeded ${streams.length} learning streams! Refreshing page...`);
+      setMessage(`✅ Successfully seeded ${result.streams.length} learning streams with ${result.tasksCreated} categorized tasks! Refreshing page...`);
       
       // Auto-refresh after 2 seconds
       setTimeout(() => {
@@ -61,7 +61,7 @@ export function SeedDataButton() {
           Seed Your Learning Data
         </h3>
         <p className="text-sm text-muted-foreground mt-2">
-          Populate your database with your 5 learning streams
+          Populate your dashboard with 5 learning streams and all categorized tasks
         </p>
       </div>
 
