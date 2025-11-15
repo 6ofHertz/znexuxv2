@@ -181,14 +181,24 @@ export const AddTaskDialog = ({ open, onOpenChange, onTaskCreated, preselectedSt
             ) : (
               <Select value={formData.stream} onValueChange={(value) => setFormData(prev => ({ ...prev, stream: value }))}>
                 <SelectTrigger id="stream">
-                  <SelectValue placeholder="Select a stream..." />
+                  <SelectValue placeholder="Select a stream...">
+                    {formData.stream && (() => {
+                      const selectedStream = streams.find(s => s.name === formData.stream);
+                      return selectedStream ? (
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: selectedStream.color }} />
+                          <span>{selectedStream.name}</span>
+                        </div>
+                      ) : formData.stream;
+                    })()}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent className="bg-background/95 backdrop-blur-md border-border">
                   {streams.map(stream => (
                     <SelectItem key={stream.id} value={stream.name}>
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: stream.color }} />
-                        {stream.name}
+                        <span>{stream.name}</span>
                       </div>
                     </SelectItem>
                   ))}
@@ -217,26 +227,35 @@ export const AddTaskDialog = ({ open, onOpenChange, onTaskCreated, preselectedSt
               <Label htmlFor="priority">Priority</Label>
               <Select value={formData.priority} onValueChange={(value: any) => setFormData(prev => ({ ...prev, priority: value }))}>
                 <SelectTrigger id="priority">
-                  <SelectValue />
+                  <SelectValue>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${
+                        formData.priority === 'high' ? 'bg-red-500' :
+                        formData.priority === 'medium' ? 'bg-amber-500' :
+                        'bg-blue-500'
+                      }`} />
+                      <span className="capitalize">{formData.priority}</span>
+                    </div>
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent className="bg-background/95 backdrop-blur-md border-border">
                   <SelectItem value="low">
-                    <span className="flex items-center gap-2">
+                    <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-blue-500" />
-                      Low
-                    </span>
+                      <span>Low</span>
+                    </div>
                   </SelectItem>
                   <SelectItem value="medium">
-                    <span className="flex items-center gap-2">
+                    <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-amber-500" />
-                      Medium
-                    </span>
+                      <span>Medium</span>
+                    </div>
                   </SelectItem>
                   <SelectItem value="high">
-                    <span className="flex items-center gap-2">
+                    <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-red-500" />
-                      High
-                    </span>
+                      <span>High</span>
+                    </div>
                   </SelectItem>
                 </SelectContent>
               </Select>
