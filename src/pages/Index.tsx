@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { StreamCard } from "@/components/StreamCard";
-import { TodaysFocus } from "@/components/TodaysFocus";
-import { PomodoroTimer } from "@/components/PomodoroTimer";
-import { StatsOverview } from "@/components/StatsOverview";
+import { StreamOverviewCard } from "@/components/StreamOverviewCard";
+import { AnalyticsHub } from "@/components/AnalyticsHub";
+import { ExecutionZone } from "@/components/ExecutionZone";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { SeedDataButton } from "@/components/SeedDataButton";
 import { Button } from "@/components/ui/button";
-import { Calendar, BarChart3, Upload, LogOut, Shield, LayoutDashboard, Target, Sparkles } from "lucide-react";
+import { Calendar, BarChart3, Upload, LogOut, Shield, Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdmin } from "@/hooks/useAdmin";
 import { getTasks, getStreams, updateTask } from "@/lib/firebase/firestore";
@@ -95,14 +94,6 @@ const Index = () => {
     }
   };
 
-  const handleStartFocus = (taskId: string) => {
-    const task = tasks.find(t => t.id === taskId);
-    if (task) {
-      console.log("Starting focus session for:", task.title);
-      toast.success(`Focus session started for: ${task.title}`);
-    }
-  };
-
   const handleSignOut = async () => {
     try {
       if (user) {
@@ -119,6 +110,14 @@ const Index = () => {
     }
   };
 
+  const handleStreamClick = (streamId: string) => {
+    // Scroll to analytics section
+    const analyticsSection = document.getElementById('analytics-hub');
+    if (analyticsSection) {
+      analyticsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   if (loading || dataLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -129,11 +128,6 @@ const Index = () => {
       </div>
     );
   }
-
-  const completedTasks = tasks.filter(task => task.completed).length;
-  const activeStreams = streams.length;
-  const overallProgress = streams.length > 0 ? Math.round(streams.reduce((acc, stream) => acc + stream.progress, 0) / streams.length) : 0;
-  const totalHours = Math.floor(tasks.filter(task => task.completed).reduce((acc, task) => acc + task.estimatedMinutes, 0) / 60);
 
   return (
     <div className="min-h-screen bg-background">
@@ -154,7 +148,7 @@ const Index = () => {
                 <h1 className="font-display text-2xl font-bold text-foreground gold-glow">
                   ZURVAN
                 </h1>
-                <p className="text-xs text-muted-foreground">Unified Learning Dashboard</p>
+                <p className="text-xs text-muted-foreground">Unified Learning Command Center</p>
               </div>
             </div>
 
@@ -197,14 +191,14 @@ const Index = () => {
         {/* Hero Section */}
         <div className="mb-8 text-center space-y-3">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-2">
-            <LayoutDashboard className="h-4 w-4" />
-            One Dashboard. All Your Learning.
+            <Sparkles className="h-4 w-4" />
+            Instant Orientation → Deep Insight → Actionable Tasks
           </div>
           <h2 className="text-4xl md:text-5xl font-display font-bold text-foreground">
-            Track Everything in One Place
+            Your Learning Command Center
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Red Hat, IBM, Skillsoft, University, CyberDojo, Personal Projects — all unified, organized, and trackable.
+            Unify all learning streams, get immediate clarity on priorities, and visualize progress in real time.
           </p>
         </div>
 
@@ -215,118 +209,99 @@ const Index = () => {
           </div>
         )}
 
-        {/* Stats Overview */}
-        <div className="mb-8">
-          <StatsOverview
-            totalHours={totalHours}
-            completedTasks={completedTasks}
-            activeStreams={activeStreams}
-            overallProgress={overallProgress}
-          />
-        </div>
-
-        {/* Main Dashboard Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Sidebar: Focus & Timer */}
-          <div className="lg:col-span-4 space-y-6">
-            {/* Today's Priorities */}
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <Target className="h-5 w-5 text-primary" />
-                <h3 className="font-display text-lg font-semibold text-foreground">
-                  Today's Priorities
-                </h3>
+        {streams.length > 0 && (
+          <>
+            {/* ========== TOP SECTION: LEARNING STREAMS OVERVIEW ========== */}
+            <section className="mb-12">
+              <div className="text-center mb-6">
+                <h2 className="text-2xl font-display font-bold text-foreground mb-2">
+                  Learning Streams Overview
+                </h2>
+                <p className="text-muted-foreground text-sm">
+                  Comprehensive view of all 5 learning streams with categorized data
+                </p>
               </div>
-              <TodaysFocus
-                tasks={tasks}
+
+              {/* Grid of stream cards - now showing full details */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5 gap-6">
+                {streams.map((stream) => {
+                  const streamName = stream.name || (stream as any).title || 'Unnamed Stream';
+                  const streamTasks = tasks.filter(t => 
+                    t.stream === stream.name || 
+                    t.stream === (stream as any).title || 
+                    t.stream === stream.id
+                  );
+                  const inProgressTasks = streamTasks.filter(t => !t.completed).length;
+                  const completedTasks = streamTasks.filter(t => t.completed).length;
+                  const nextTask = streamTasks.find(t => !t.completed);
+
+                  return (
+                    <div key={stream.id}>
+                      <StreamOverviewCard
+                        id={stream.id}
+                        name={streamName}
+                        description={stream.description}
+                        category={stream.category}
+                        progress={stream.progress || 0}
+                        color={stream.color || '#888888'}
+                        tasksInProgress={inProgressTasks}
+                        completedTasks={completedTasks}
+                        totalTasks={streamTasks.length}
+                        nextItem={nextTask?.title}
+                        onClick={() => handleStreamClick(stream.id)}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+
+            {/* Divider */}
+            <div className="relative mb-12">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-border"></div>
+              </div>
+              <div className="relative flex justify-center">
+                <span className="bg-background px-4 text-sm text-muted-foreground">
+                  Live Analytics & Metrics
+                </span>
+              </div>
+            </div>
+
+            {/* ========== MIDDLE SECTION: ANALYTICS HUB ========== */}
+            <section id="analytics-hub" className="mb-12 scroll-mt-20">
+              <AnalyticsHub streams={streams} tasks={tasks} />
+            </section>
+
+            {/* Divider */}
+            <div className="relative mb-12">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-border"></div>
+              </div>
+              <div className="relative flex justify-center">
+                <span className="bg-background px-4 text-sm text-muted-foreground">
+                  Action & Execution
+                </span>
+              </div>
+            </div>
+
+            {/* ========== BOTTOM SECTION: EXECUTION ZONE ========== */}
+            <section className="mb-12">
+              <ExecutionZone 
+                tasks={tasks} 
+                streams={streams}
                 onToggleTask={handleToggleTask}
-                onStartFocus={handleStartFocus}
               />
-            </div>
-
-            {/* Pomodoro Timer */}
-            <PomodoroTimer />
-          </div>
-
-          {/* Right Content: Learning Streams */}
-          <div className="lg:col-span-8">
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-display text-2xl font-semibold text-foreground">
-                  Your Learning Streams
-                </h3>
-                <div className="text-sm text-muted-foreground">
-                  {activeStreams} active {activeStreams === 1 ? 'stream' : 'streams'}
-                </div>
-              </div>
-              <p className="text-muted-foreground">
-                All your courses, certifications, and projects organized by platform
-              </p>
-            </div>
-            
-            {streams.length === 0 ? (
-              <div className="text-center py-16 px-4 bg-card border-2 border-dashed rounded-lg">
-                <div className="max-w-md mx-auto space-y-4">
-                  <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mx-auto">
-                    <LayoutDashboard className="h-8 w-8 text-muted-foreground" />
-                  </div>
-                  <h4 className="text-xl font-semibold text-foreground">No Learning Streams Yet</h4>
-                  <p className="text-muted-foreground">
-                    Click the "Seed My Data Now" button above to populate your dashboard with sample learning streams and get started! 🚀
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {streams.map((stream) => (
-                  <StreamCard key={stream.name} {...stream} />
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Bottom Info Section */}
-        <div className="mt-12 pt-8 border-t">
-          <div className="text-center space-y-4">
-            <h4 className="font-display text-xl font-semibold text-foreground">
-              Why ZURVAN?
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-              <div className="space-y-2">
-                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-                  <Target className="h-6 w-6 text-primary" />
-                </div>
-                <h5 className="font-semibold text-foreground">Unified Tracking</h5>
-                <p className="text-sm text-muted-foreground">
-                  All platforms in one place. No more context switching.
-                </p>
-              </div>
-              <div className="space-y-2">
-                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-                  <BarChart3 className="h-6 w-6 text-primary" />
-                </div>
-                <h5 className="font-semibold text-foreground">Clear Analytics</h5>
-                <p className="text-sm text-muted-foreground">
-                  Track focus, consistency, and growth over time.
-                </p>
-              </div>
-              <div className="space-y-2">
-                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-                  <Sparkles className="h-6 w-6 text-primary" />
-                </div>
-                <h5 className="font-semibold text-foreground">Daily Priorities</h5>
-                <p className="text-sm text-muted-foreground">
-                  Know exactly what to focus on each day.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+            </section>
+          </>
+        )}
 
         {/* Footer */}
-        <footer className="text-center text-sm text-muted-foreground pt-12 pb-4">
-          <p>ZURVAN — Your unified learning command center 🚀</p>
+        <footer className="text-center text-sm text-muted-foreground pt-12 pb-4 border-t">
+          <p className="mb-2">ZURVAN — Your unified learning command center 🚀</p>
+          <p className="text-xs">
+            Strategic learning coordination • Real-time progress tracking • Actionable execution
+          </p>
         </footer>
       </div>
     </div>
