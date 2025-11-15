@@ -255,6 +255,16 @@ const Index = () => {
                       const completedTasks = streamTasks.filter(t => t.completed).length;
                       const nextTask = streamTasks.find(t => !t.completed);
 
+                      // Calculate high priority count
+                      const highPriorityCount = streamTasks.filter(
+                        t => !t.completed && t.priority === 'high'
+                      ).length;
+
+                      // Calculate estimated time remaining (sum of incomplete tasks)
+                      const estimatedMinutesRemaining = streamTasks
+                        .filter(t => !t.completed)
+                        .reduce((sum, t) => sum + (t.estimatedMinutes || 0), 0);
+
                       return (
                         <TrophyStreamCard
                           key={stream.id}
@@ -264,6 +274,9 @@ const Index = () => {
                           nextTask={nextTask?.title}
                           onClick={() => handleStreamClick(stream.id)}
                           index={index}
+                          highPriorityCount={highPriorityCount}
+                          estimatedMinutesRemaining={estimatedMinutesRemaining}
+                          lastActivityDate={(stream as any).lastActivityDate}
                         />
                       );
                     })}
