@@ -118,6 +118,15 @@ const Index = () => {
     }
   };
 
+  // Filter to only show unique streams (one per stream name)
+  const uniqueStreams = streams.reduce((acc, stream) => {
+    const streamName = stream.name || (stream as any).title || 'Unnamed Stream';
+    if (!acc.find(s => (s.name || (s as any).title) === streamName)) {
+      acc.push(stream);
+    }
+    return acc;
+  }, [] as Stream[]);
+
   if (loading || dataLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -224,7 +233,7 @@ const Index = () => {
 
               {/* Grid of stream cards - now showing full details */}
               <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5 gap-6">
-                {streams.map((stream) => {
+                {uniqueStreams.map((stream) => {
                   const streamName = stream.name || (stream as any).title || 'Unnamed Stream';
                   const streamTasks = tasks.filter(t => 
                     t.stream === stream.name || 
@@ -270,7 +279,7 @@ const Index = () => {
 
             {/* ========== MIDDLE SECTION: ANALYTICS HUB ========== */}
             <section id="analytics-hub" className="mb-12 scroll-mt-20">
-              <AnalyticsHub streams={streams} tasks={tasks} />
+              <AnalyticsHub streams={uniqueStreams} tasks={tasks} />
             </section>
 
             {/* Divider */}
@@ -289,7 +298,7 @@ const Index = () => {
             <section className="mb-12">
               <ExecutionZone 
                 tasks={tasks} 
-                streams={streams}
+                streams={uniqueStreams}
                 onToggleTask={handleToggleTask}
               />
             </section>
