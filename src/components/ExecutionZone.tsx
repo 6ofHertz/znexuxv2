@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { AddTaskDialog } from "@/components/AddTaskDialog";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   CheckCircle2, Circle, Play, Pause, RotateCcw, Upload, 
@@ -17,13 +18,16 @@ interface ExecutionZoneProps {
   tasks: Task[];
   streams: Stream[];
   onToggleTask: (taskId: string) => void;
+  onTaskCreated?: () => void;
 }
 
-export const ExecutionZone = ({ tasks, streams, onToggleTask }: ExecutionZoneProps) => {
+export const ExecutionZone = ({ tasks, streams, onToggleTask, onTaskCreated }: ExecutionZoneProps) => {
   const [focusTime, setFocusTime] = useState(25 * 60); // 25 minutes in seconds
   const [isRunning, setIsRunning] = useState(false);
   const [expandedStreams, setExpandedStreams] = useState<Set<string>>(new Set());
   const [noteText, setNoteText] = useState("");
+  const [showAddTask, setShowAddTask] = useState(false);
+  const [selectedStreamForTask, setSelectedStreamForTask] = useState<string | undefined>();
 
   // Get today's tasks (tasks created today or due soon)
   const todaysTasks = tasks.filter(t => !t.completed).slice(0, 5);
@@ -58,6 +62,11 @@ export const ExecutionZone = ({ tasks, streams, onToggleTask }: ExecutionZonePro
       toast.success("Note saved!");
       setNoteText("");
     }
+  };
+
+  const handleAddTaskToStream = (streamName: string) => {
+    setSelectedStreamForTask(streamName);
+    setShowAddTask(true);
   };
 
   const formatTime = (seconds: number) => {
@@ -328,7 +337,15 @@ export const ExecutionZone = ({ tasks, streams, onToggleTask }: ExecutionZonePro
         <Card className="p-6 cosmic-card">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-foreground">Stream Task Queues</h3>
-            <Button size="sm" variant="outline" className="gap-2">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="gap-2"
+              onClick={() => {
+                setSelectedStreamForTask(undefined);
+                setShowAddTask(true);
+              }}
+            >
               <Plus className="h-4 w-4" />
               Add Task
             </Button>
@@ -337,7 +354,6 @@ export const ExecutionZone = ({ tasks, streams, onToggleTask }: ExecutionZonePro
           <div className="space-y-3">
             {tasksByStream.map(({ stream, tasks: streamTasks }) => {
               const isExpanded = expandedStreams.has(stream.id);
-              // Handle both 'name' and 'title' with null safety
               const streamName = stream.name || (stream as any).title || 'Unnamed Stream';
               const displayName = typeof streamName === 'string' ? streamName.split('(')[0].trim() : 'Unnamed Stream';
               
@@ -359,7 +375,21 @@ export const ExecutionZone = ({ tasks, streams, onToggleTask }: ExecutionZonePro
                       />
                       <span className="font-medium text-foreground">{displayName}</span>
                     </div>
-                    <Badge variant="secondary">{streamTasks.length} tasks</Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary">{streamTasks.length} tasks</Badge>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAddTaskToStream(streamName);
+                        }}
+                        className="gap-1 h-7 text-xs"
+                      >
+                        <Plus className="h-3 w-3" />
+                        Add
+                      </Button>
+                    </div>
                   </button>
 
                   <AnimatePresence>
@@ -394,9 +424,20 @@ export const ExecutionZone = ({ tasks, streams, onToggleTask }: ExecutionZonePro
                               </div>
                             ))
                           ) : (
-                            <p className="text-sm text-muted-foreground text-center py-4">
-                              No tasks in this stream yet
-                            </p>
+                            <div className="text-center py-8">
+                              <p className="text-sm text-muted-foreground mb-3">
+                                No tasks in this stream yet
+                              </p>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleAddTaskToStream(streamName)}
+                                className="gap-2"
+                              >
+                                <Plus className="h-4 w-4" />
+                                Add First Task
+                              </Button>
+                            </div>
                           )}
                         </div>
                       </motion.div>
@@ -408,6 +449,14 @@ export const ExecutionZone = ({ tasks, streams, onToggleTask }: ExecutionZonePro
           </div>
         </Card>
       </motion.div>
+
+      {/* Add Task Dialog */}
+      <AddTaskDialog
+        open={showAddTask}
+        onOpenChange={setShowAddTask}
+        onTaskCreated={onTaskCreated}
+        preselectedStream={selectedStreamForTask}
+      />
     </div>
   );
 };

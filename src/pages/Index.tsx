@@ -5,8 +5,10 @@ import { AnalyticsHub } from "@/components/AnalyticsHub";
 import { ExecutionZone } from "@/components/ExecutionZone";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { SeedDataButton } from "@/components/SeedDataButton";
+import { AddStreamDialog } from "@/components/AddStreamDialog";
+import { AddTaskDialog } from "@/components/AddTaskDialog";
 import { Button } from "@/components/ui/button";
-import { Calendar, BarChart3, Upload, LogOut, Shield, Sparkles, Trophy } from "lucide-react";
+import { Calendar, BarChart3, Upload, LogOut, Shield, Sparkles, Trophy, Plus } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdmin } from "@/hooks/useAdmin";
 import { getTasks, getStreams, updateTask } from "@/lib/firebase/firestore";
@@ -21,6 +23,8 @@ const Index = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [streams, setStreams] = useState<Stream[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
+  const [showAddStream, setShowAddStream] = useState(false);
+  const [showAddTask, setShowAddTask] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -72,6 +76,21 @@ const Index = () => {
 
     fetchData();
   }, [user]);
+
+  const refreshData = async () => {
+    if (!user) return;
+    
+    try {
+      const [tasksData, streamsData] = await Promise.all([
+        getTasks(user.uid),
+        getStreams(user.uid)
+      ]);
+      setTasks(tasksData);
+      setStreams(streamsData);
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+    }
+  };
 
   const handleToggleTask = async (taskId: string) => {
     const task = tasks.find(t => t.id === taskId);
@@ -163,6 +182,24 @@ const Index = () => {
 
             {/* Navigation Actions */}
             <div className="flex items-center gap-2">
+              <Button 
+                variant="default" 
+                size="sm" 
+                className="gap-2"
+                onClick={() => setShowAddTask(true)}
+              >
+                <Plus className="h-4 w-4" />
+                <span className="hidden md:inline">Add Task</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-2"
+                onClick={() => setShowAddStream(true)}
+              >
+                <Plus className="h-4 w-4" />
+                <span className="hidden md:inline">Add Stream</span>
+              </Button>
               <Button variant="ghost" size="sm" className="gap-2 hidden md:flex">
                 <Calendar className="h-4 w-4" />
                 Schedule
@@ -213,8 +250,15 @@ const Index = () => {
 
         {/* Show Seed Button if no streams exist */}
         {streams.length === 0 && !dataLoading && (
-          <div className="flex justify-center mb-8">
+          <div className="flex flex-col items-center gap-4 mb-8">
             <SeedDataButton />
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground mb-2">Or start fresh by creating your own stream:</p>
+              <Button onClick={() => setShowAddStream(true)} variant="outline" className="gap-2">
+                <Plus className="h-4 w-4" />
+                Create Your First Stream
+              </Button>
+            </div>
           </div>
         )}
 
@@ -340,6 +384,18 @@ const Index = () => {
           </p>
         </footer>
       </div>
+
+      {/* Dialogs */}
+      <AddStreamDialog 
+        open={showAddStream} 
+        onOpenChange={setShowAddStream}
+        onStreamCreated={refreshData}
+      />
+      <AddTaskDialog 
+        open={showAddTask} 
+        onOpenChange={setShowAddTask}
+        onTaskCreated={refreshData}
+      />
     </div>
   );
 };
