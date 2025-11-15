@@ -1,0 +1,50 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Users collection - users can only read/write their own data
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // Tasks - users can only access their own tasks
+    match /tasks/{taskId} {
+      allow read, update, delete: if isAuthenticated() && 
+        resource.data.user_id == request.auth.uid;
+      allow create: if isAuthenticated() && 
+        request.resource.data.user_id == request.auth.uid;
+    }
+    
+    // Streams - users can only access their own streams
+    match /streams/{streamId} {
+      allow read, update, delete: if isAuthenticated() && 
+        resource.data.user_id == request.auth.uid;
+      allow create: if isAuthenticated() && 
+        request.resource.data.user_id == request.auth.uid;
+    }
+    
+    // Focus sessions
+    match /focus_sessions/{sessionId} {
+      allow read, update, delete: if isAuthenticated() && 
+        resource.data.user_id == request.auth.uid;
+      allow create: if isAuthenticated() && 
+        request.resource.data.user_id == request.auth.uid;
+    }
+    
+    // Audit logs - read for admins only, create for authenticated users
+    match /audit_logs/{logId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+    }
+  }
+}

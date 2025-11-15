@@ -1,0 +1,125 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ZURVAN Design System - ChatGPT-Inspired Clean Interface */
+
+@layer base {
+  :root {
+    /* Clean Backgrounds */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 9%;
+    
+    /* Card Surfaces */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 9%;
+    
+    /* Sidebar */
+    --sidebar: 0 0% 98%;
+    --sidebar-foreground: 0 0% 9%;
+    --sidebar-border: 0 0% 90%;
+    
+    /* Primary Accent (Teal like ChatGPT) */
+    --primary: 171 77% 44%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Secondary */
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 9%;
+    
+    /* Muted Elements */
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+    
+    /* Accent Highlights */
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 9%;
+    
+    /* Alerts */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    
+    /* Borders & Inputs */
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 171 77% 44%;
+    
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    /* Dark Theme like ChatGPT Dark Mode */
+    --background: 0 0% 11%;
+    --foreground: 0 0% 95%;
+    
+    --card: 0 0% 13%;
+    --card-foreground: 0 0% 95%;
+    
+    --sidebar: 0 0% 9%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-border: 0 0% 18%;
+    
+    --primary: 171 77% 44%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 0 0% 18%;
+    --secondary-foreground: 0 0% 95%;
+    
+    --muted: 0 0% 18%;
+    --muted-foreground: 0 0% 60%;
+    
+    --accent: 0 0% 18%;
+    --accent-foreground: 0 0% 95%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 171 77% 44%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+  }
+}
+
+@layer components {
+  .clean-card {
+    @apply rounded-lg border border-border bg-card shadow-sm;
+    transition: all 0.2s ease;
+  }
+  
+  .clean-card:hover {
+    @apply shadow-md border-border/80;
+  }
+  
+  .sidebar-item {
+    @apply flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer;
+  }
+  
+  .sidebar-item:hover {
+    @apply bg-accent;
+  }
+  
+  .sidebar-item.active {
+    @apply bg-accent font-medium;
+  }
+}
