@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
-import { CheckCircle2, Clock, TrendingUp, ChevronRight, Sparkles } from "lucide-react";
+import { CheckCircle2, Clock, TrendingUp, ChevronRight, Sparkles, AlertCircle, Timer, Calendar, Zap } from "lucide-react";
 import type { Stream } from "@/types";
 
 interface TrophyStreamCardProps {
@@ -12,6 +12,9 @@ interface TrophyStreamCardProps {
   nextTask?: string;
   onClick?: () => void;
   index: number;
+  highPriorityCount?: number;
+  estimatedMinutesRemaining?: number;
+  lastActivityDate?: string;
 }
 
 // Unified 3D Trophy Base Designs - Cradle/Slot System
@@ -160,10 +163,47 @@ export const TrophyStreamCard = ({
   nextTask,
   onClick,
   index,
+  highPriorityCount = 0,
+  estimatedMinutesRemaining = 0,
+  lastActivityDate,
 }: TrophyStreamCardProps) => {
   const displayName = stream.name?.split('(')[0].trim() || 'Unnamed Stream';
   const category = (stream as any).category || 'General';
   const base = unifiedBaseDesigns[category as keyof typeof unifiedBaseDesigns] || unifiedBaseDesigns.Training;
+
+  // Format time remaining
+  const formatTimeRemaining = (minutes: number) => {
+    if (minutes < 60) return `${minutes}m`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ${minutes % 60}m`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ${hours % 24}h`;
+  };
+
+  // Calculate days since last activity
+  const getDaysSinceActivity = () => {
+    if (!lastActivityDate) return null;
+    const diff = Date.now() - new Date(lastActivityDate).getTime();
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    if (days === 0) return 'Today';
+    if (days === 1) return 'Yesterday';
+    if (days < 7) return `${days} days ago`;
+    return `${Math.floor(days / 7)} weeks ago`;
+  };
+
+  // Determine activity status
+  const getActivityStatus = () => {
+    if (!lastActivityDate) return { label: 'New', color: 'text-blue-400' };
+    const diff = Date.now() - new Date(lastActivityDate).getTime();
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    if (days === 0) return { label: 'Active Now', color: 'text-green-400' };
+    if (days <= 3) return { label: 'Hot Streak', color: 'text-orange-400' };
+    if (days <= 7) return { label: 'Active', color: 'text-cyan-400' };
+    return { label: 'Idle', color: 'text-gray-400' };
+  };
+
+  const activityStatus = getActivityStatus();
+  const daysSince = getDaysSinceActivity();
 
   return (
     <motion.div
@@ -275,20 +315,30 @@ export const TrophyStreamCard = ({
             />
 
             <div className="space-y-4 relative z-10">
-              {/* DEFAULT STATE: Minimal Information */}
+              {/* DEFAULT STATE: Enhanced Minimal Information */}
               <div className="space-y-3">
-                {/* Category Badge */}
-                <Badge
-                  variant="secondary"
-                  className="text-[10px] font-bold uppercase tracking-wider px-2 py-1"
-                  style={{
-                    borderLeft: `3px solid ${stream.color}`,
-                    color: stream.color,
-                    textShadow: `0 0 8px ${stream.color}40`,
-                  }}
-                >
-                  {category}
-                </Badge>
+                {/* Category Badge & Activity Status */}
+                <div className="flex items-center justify-between gap-2">
+                  <Badge
+                    variant="secondary"
+                    className="text-[10px] font-bold uppercase tracking-wider px-2 py-1"
+                    style={{
+                      borderLeft: `3px solid ${stream.color}`,
+                      color: stream.color,
+                      textShadow: `0 0 8px ${stream.color}40`,
+                    }}
+                  >
+                    {category}
+                  </Badge>
+                  
+                  {/* Activity Status Badge */}
+                  <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-background/50 border border-border/30">
+                    <Zap className={`h-3 w-3 ${activityStatus.color}`} />
+                    <span className={`text-[9px] font-bold uppercase tracking-wide ${activityStatus.color}`}>
+                      {activityStatus.label}
+                    </span>
+                  </div>
+                </div>
 
                 {/* Stream Title & Progress Circle */}
                 <div className="flex items-center justify-between gap-4">
@@ -309,7 +359,6 @@ export const TrophyStreamCard = ({
                         pathTransitionDuration: 0.8,
                       })}
                     />
-                    {/* Glow around progress ring */}
                     <div 
                       className="absolute inset-0 rounded-full blur-md opacity-30"
                       style={{ 
@@ -319,14 +368,58 @@ export const TrophyStreamCard = ({
                   </div>
                 </div>
 
-                {/* Total Task Count - Prominent */}
-                <div className="flex items-center gap-2 py-2">
-                  <Clock className="h-5 w-5" style={{ color: stream.color }} />
-                  <span className="text-3xl font-bold" style={{ color: stream.color }}>
-                    {tasksInProgress + completedTasks}+
-                  </span>
-                  <span className="text-sm text-muted-foreground">tasks in stream</span>
+                {/* Enhanced Metrics Row */}
+                <div className="grid grid-cols-3 gap-2">
+                  {/* Total Tasks */}
+                  <div className="flex flex-col items-center p-2 rounded-lg bg-muted/20 border border-border/30">
+                    <Clock className="h-4 w-4 mb-1" style={{ color: stream.color }} />
+                    <span className="text-xl font-bold" style={{ color: stream.color }}>
+                      {tasksInProgress + completedTasks}
+                    </span>
+                    <span className="text-[9px] text-muted-foreground uppercase tracking-wide">Tasks</span>
+                  </div>
+
+                  {/* High Priority */}
+                  {highPriorityCount > 0 && (
+                    <div className="flex flex-col items-center p-2 rounded-lg bg-red-500/10 border border-red-500/30">
+                      <AlertCircle className="h-4 w-4 mb-1 text-red-400" />
+                      <span className="text-xl font-bold text-red-400">
+                        {highPriorityCount}
+                      </span>
+                      <span className="text-[9px] text-red-300/70 uppercase tracking-wide">Urgent</span>
+                    </div>
+                  )}
+
+                  {/* Estimated Time */}
+                  {estimatedMinutesRemaining > 0 && (
+                    <div className="flex flex-col items-center p-2 rounded-lg bg-muted/20 border border-border/30">
+                      <Timer className="h-4 w-4 mb-1 text-amber-400" />
+                      <span className="text-lg font-bold text-foreground">
+                        {formatTimeRemaining(estimatedMinutesRemaining)}
+                      </span>
+                      <span className="text-[9px] text-muted-foreground uppercase tracking-wide">Left</span>
+                    </div>
+                  )}
                 </div>
+
+                {/* Next Deadline Banner */}
+                {stream.nextDeadline && (
+                  <div 
+                    className="flex items-center gap-2 p-2 rounded-lg border"
+                    style={{ 
+                      borderColor: `${stream.color}40`,
+                      background: `linear-gradient(90deg, ${stream.color}10, transparent)`,
+                    }}
+                  >
+                    <Calendar className="h-4 w-4 flex-shrink-0" style={{ color: stream.color }} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[9px] text-muted-foreground uppercase tracking-wide font-semibold">Next Deadline</p>
+                      <p className="text-sm font-bold text-foreground truncate">
+                        {stream.nextDeadline}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* HOVER STATE: Detailed Information Fades In */}
@@ -337,6 +430,14 @@ export const TrophyStreamCard = ({
               >
                 {/* Divider */}
                 <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-border to-transparent" />
+
+                {/* Last Activity */}
+                {daysSince && (
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-muted/20 border border-border/30">
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wide font-semibold">Last Activity</span>
+                    <span className="text-xs font-bold text-foreground">{daysSince}</span>
+                  </div>
+                )}
 
                 {/* Detailed Metrics */}
                 <div className="grid grid-cols-2 gap-3">
