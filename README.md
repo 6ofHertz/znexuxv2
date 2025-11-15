@@ -9,6 +9,8 @@
 [![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=flat&logo=firebase&logoColor=black)](https://firebase.google.com/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 
+
+<img width="1630" height="908" alt="image" src="https://github.com/user-attachments/assets/8a145c5a-7253-41b7-a63a-1ccddd8c68fb" />
 </div>
 
 ---
@@ -90,8 +92,8 @@ Organize your learning journey:
 
 1. **Clone the repository:**
    ```bash
-   git clone <YOUR_GIT_URL>
-   cd <YOUR_PROJECT_NAME>
+   git clone <znexus-2>
+   cd <nexus-2>
    ```
 
 2. **Install dependencies:**
@@ -356,7 +358,6 @@ Contributions are welcome! Please follow these steps:
 
 ## 📝 License
 
-This project is part of a Lovable project and follows their terms of service.
 
 ---
 
@@ -410,8 +411,8 @@ Need help? Check these resources:
 
 <div align="center">
 
-**Built with ❤️ using [Lovable](https://lovable.dev)**
+**💀 vibes n inshalla🤞🏿**
 
-[🌟 Star this project](https://github.com/your-repo) | [📝 Report Bug](https://github.com/your-repo/issues) | [✨ Request Feature](https://github.com/your-repo/issues)
+[🌟 Star this project](https://github.com/6ofHertz/znexus-2) | [📝 Report Bug](https://github.com/6ofHertz/znexus-2/issues) | [✨ Request Feature](https://github.com/6ofHertz/znexus-2/issues)
 
 </div>
