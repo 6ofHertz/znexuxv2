@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local session tracking (private notes, not committed)
+.session-log.md
