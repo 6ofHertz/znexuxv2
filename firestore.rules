@@ -17,6 +17,11 @@ service cloud.firestore {
       allow read, write: if isOwner(userId);
     }
     
+    // User preferences - users can only access their own preferences (onboarding, settings, etc.)
+    match /userPreferences/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+    
     // Tasks - users can only access their own tasks
     match /tasks/{taskId} {
       allow read, update, delete: if isAuthenticated() && 
@@ -27,6 +32,14 @@ service cloud.firestore {
     
     // Streams - users can only access their own streams
     match /streams/{streamId} {
+      allow read, update, delete: if isAuthenticated() && 
+        resource.data.user_id == request.auth.uid;
+      allow create: if isAuthenticated() && 
+        request.resource.data.user_id == request.auth.uid;
+    }
+    
+    // Notes - users can only access their own notes
+    match /notes/{noteId} {
       allow read, update, delete: if isAuthenticated() && 
         resource.data.user_id == request.auth.uid;
       allow create: if isAuthenticated() && 

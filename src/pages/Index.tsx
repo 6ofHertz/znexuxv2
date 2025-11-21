@@ -7,10 +7,12 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { SeedDataButton } from "@/components/SeedDataButton";
 import { AddStreamDialog } from "@/components/AddStreamDialog";
 import { AddTaskDialog } from "@/components/AddTaskDialog";
+import { OnboardingTour } from "@/components/OnboardingTour";
 import { Button } from "@/components/ui/button";
-import { Calendar, BarChart3, Upload, LogOut, Shield, Sparkles, Trophy, Plus } from "lucide-react";
+import { Calendar, BarChart3, Upload, LogOut, Shield, Sparkles, Trophy, Plus, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdmin } from "@/hooks/useAdmin";
+import { useOnboarding } from "@/hooks/useOnboarding";
 import { getTasks, getStreams, updateTask } from "@/lib/firebase/firestore";
 import { logAudit } from "@/lib/audit";
 import type { Task, Stream } from "@/types";
@@ -19,18 +21,27 @@ import { toast } from "sonner";
 const Index = () => {
   const { user, loading, signOut } = useAuth();
   const { isAdmin } = useAdmin();
+  const { shouldShowOnboarding, loading: onboardingLoading } = useOnboarding();
   const navigate = useNavigate();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [streams, setStreams] = useState<Stream[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [showAddStream, setShowAddStream] = useState(false);
   const [showAddTask, setShowAddTask] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
       navigate("/auth");
     }
   }, [user, loading, navigate]);
+
+  // Check if onboarding should be shown
+  useEffect(() => {
+    if (!onboardingLoading && shouldShowOnboarding()) {
+      setShowOnboarding(true);
+    }
+  }, [onboardingLoading, shouldShowOnboarding]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -159,6 +170,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Onboarding Tour */}
+      {showOnboarding && (
+        <OnboardingTour onComplete={() => setShowOnboarding(false)} />
+      )}
+
       {/* Top Navigation Bar */}
       <nav className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
@@ -223,6 +239,15 @@ const Index = () => {
                   <Shield className="h-4 w-4" />
                 </Button>
               )}
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate("/settings")}
+                className="gap-2"
+              >
+                <Settings className="h-4 w-4" />
+                <span className="hidden lg:inline">Settings</span>
+              </Button>
               <Button variant="ghost" size="sm" className="gap-2" onClick={handleSignOut}>
                 <LogOut className="h-4 w-4" />
                 <span className="hidden md:inline">Sign Out</span>

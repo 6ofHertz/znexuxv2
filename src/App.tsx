@@ -4,6 +4,7 @@ import { ThemeProvider } from "./contexts/ThemeProvider";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AdminAudit from "./pages/AdminAudit";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -25,6 +26,7 @@ function App() {
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/admin/audit" element={<AdminAudit />} />
+                <Route path="/settings" element={<Settings />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Router>
