@@ -41,3 +41,12 @@ export interface AuditLog {
   ip_address?: string;
   created_at: string;
 }
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  name: string;
+  created_at: string;
+  email_verified: boolean;
+  last_login?: string;
+}

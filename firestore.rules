@@ -12,9 +12,10 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
     
-    // Users collection - users can only read/write their own data
+    // Users collection - users can read/write their own profile data
     match /users/{userId} {
       allow read, write: if isOwner(userId);
+      allow create: if isAuthenticated() && request.auth.uid == userId;
     }
     
     // User preferences - users can only access their own preferences (onboarding, settings, etc.)

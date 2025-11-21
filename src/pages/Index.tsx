@@ -9,7 +9,8 @@ import { AddStreamDialog } from "@/components/AddStreamDialog";
 import { AddTaskDialog } from "@/components/AddTaskDialog";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { Button } from "@/components/ui/button";
-import { Calendar, BarChart3, Upload, LogOut, Shield, Sparkles, Trophy, Plus, Settings } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Calendar, BarChart3, Upload, LogOut, Shield, Sparkles, Trophy, Plus, Settings, Mail, AlertCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useOnboarding } from "@/hooks/useOnboarding";
@@ -19,7 +20,7 @@ import type { Task, Stream } from "@/types";
 import { toast } from "sonner";
 
 const Index = () => {
-  const { user, loading, signOut } = useAuth();
+  const { user, loading, signOut, resendVerificationEmail } = useAuth();
   const { isAdmin } = useAdmin();
   const { shouldShowOnboarding, loading: onboardingLoading } = useOnboarding();
   const navigate = useNavigate();
@@ -100,6 +101,17 @@ const Index = () => {
       setStreams(streamsData);
     } catch (error) {
       console.error('Error refreshing data:', error);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    const { error } = await resendVerificationEmail();
+    if (error) {
+      toast.error('Failed to send verification email');
+    } else {
+      toast.success('Verification email sent! 📧', {
+        description: 'Please check your inbox.',
+      });
     }
   };
 
@@ -256,6 +268,34 @@ const Index = () => {
           </div>
         </div>
       </nav>
+
+      {/* Email Verification Banner */}
+      {user && !user.emailVerified && (
+        <div className="bg-amber-500/10 border-b border-amber-500/20">
+          <div className="max-w-7xl mx-auto px-4 md:px-8 py-3">
+            <Alert className="border-amber-500/50 bg-transparent">
+              <AlertCircle className="h-4 w-4 text-amber-500" />
+              <AlertDescription className="flex items-center justify-between gap-4">
+                <div className="flex-1">
+                  <p className="font-medium text-sm text-foreground">Please verify your email address</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    We sent a verification link to <span className="font-medium">{user.email}</span>
+                  </p>
+                </div>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={handleResendVerification}
+                  className="gap-2 flex-shrink-0"
+                >
+                  <Mail className="h-3 w-3" />
+                  Resend Email
+                </Button>
+              </AlertDescription>
+            </Alert>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="max-w-[1800px] mx-auto px-4 md:px-8 py-8">
