@@ -5,15 +5,19 @@ import {
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
   onAuthStateChanged,
+  sendEmailVerification,
+  updateProfile
 } from '@firebase/auth';
 import { auth } from '@/lib/firebase/config';
+import { createUserProfile, updateUserProfile } from '@/lib/firebase/firestore';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  signUp: (email: string, password: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, name: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+  resendVerificationEmail: () => Promise<{ error: any }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,19 +35,47 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
+      
+      // Update last login when user signs in
+      if (firebaseUser) {
+        try {
+          await updateUserProfile(firebaseUser.uid, { 
+            last_login: new Date().toISOString(),
+            email_verified: firebaseUser.emailVerified 
+          });
+        } catch (error) {
+          console.error('Error updating last login:', error);
+        }
+      }
+      
       setLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, name: string) => {
     if (!auth) {
       return { error: new Error('Firebase Auth not initialized') };
     }
     
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      
+      // Update user profile with display name
+      await updateProfile(user, { displayName: name });
+      
+      // Create user profile in Firestore
+      await createUserProfile(user.uid, {
+        email: email,
+        name: name,
+        email_verified: false
+      });
+      
+      // Send verification email
+      await sendEmailVerification(user);
+      
       return { error: null };
     } catch (error: any) {
       return { error };
@@ -71,8 +103,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     await firebaseSignOut(auth);
   };
 
+  const resendVerificationEmail = async () => {
+    if (!auth || !user) {
+      return { error: new Error('No user logged in') };
+    }
+    
+    try {
+      await sendEmailVerification(user);
+      return { error: null };
+    } catch (error: any) {
+      return { error };
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut, resendVerificationEmail }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,7 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeProvider";
-import { SettingsProvider } from "./contexts/SettingsContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AdminAudit from "./pages/AdminAudit";
@@ -20,19 +19,17 @@ function App() {
       <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
         <TooltipProvider>
           <AuthProvider>
-            <SettingsProvider>
-              <Toaster />
-              <HoverReceiver />
-              <Router>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/admin/audit" element={<AdminAudit />} />
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Router>
-            </SettingsProvider>
+            <Toaster />
+            <HoverReceiver />
+            <Router>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/admin/audit" element={<AdminAudit />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Router>
           </AuthProvider>
         </TooltipProvider>
       </ThemeProvider>
