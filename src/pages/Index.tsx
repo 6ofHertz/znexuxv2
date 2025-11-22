@@ -8,7 +8,7 @@ import { SeedDataButton } from "@/components/SeedDataButton";
 import { AddStreamDialog } from "@/components/AddStreamDialog";
 import { AddTaskDialog } from "@/components/AddTaskDialog";
 import { Button } from "@/components/ui/button";
-import { Calendar, BarChart3, Upload, LogOut, Shield, Sparkles, Trophy, Plus } from "lucide-react";
+import { Calendar, BarChart3, Upload, LogOut, Shield, Sparkles, Trophy, Plus, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdmin } from "@/hooks/useAdmin";
 import { getTasks, getStreams, updateTask } from "@/lib/firebase/firestore";
@@ -211,6 +211,16 @@ const Index = () => {
               <Button variant="ghost" size="sm" className="gap-2 hidden md:flex">
                 <Upload className="h-4 w-4" />
                 Upload
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="gap-2"
+                onClick={() => navigate("/settings")}
+                title="Settings"
+              >
+                <Settings className="h-4 w-4" />
+                <span className="hidden lg:inline">Settings</span>
               </Button>
               <ThemeToggle />
               {isAdmin && (
