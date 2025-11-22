@@ -1,4 +1,4 @@
-nimport { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from './config';
 import { UserSettings } from '@/contexts/SettingsContext';
 

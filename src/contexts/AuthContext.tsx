@@ -7,7 +7,7 @@ import {
   onAuthStateChanged,
   sendEmailVerification,
   updateProfile
-} from '@firebase/auth';
+} from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
 import { createUserProfile, updateUserProfile } from '@/lib/firebase/firestore';
 
