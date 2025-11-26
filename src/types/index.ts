@@ -9,6 +9,31 @@ export interface Task {
   priority: 'low' | 'medium' | 'high';
   created_at: string;
   updated_at?: string;
+  // Enhanced features
+  tags?: string[];
+  timeTracking?: {
+    totalSeconds: number;
+    isRunning: boolean;
+    startedAt?: string;
+  };
+  subtasks?: Subtask[];
+  attachments?: Attachment[];
+  dueDate?: string;
+  completedAt?: string;
+}
+
+export interface Subtask {
+  id: string;
+  title: string;
+  completed: boolean;
+}
+
+export interface Attachment {
+  id: string;
+  name: string;
+  url: string;
+  type: string;
+  uploadedAt: string;
 }
 
 export interface Stream {

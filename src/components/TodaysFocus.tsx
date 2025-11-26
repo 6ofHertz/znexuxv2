@@ -10,9 +10,10 @@ interface TodaysFocusProps {
   tasks: Task[];
   onToggleTask: (taskId: string) => void;
   onStartFocus: (taskId: string) => void;
+  onTaskClick?: (task: Task) => void;
 }
 
-export const TodaysFocus = ({ tasks, onToggleTask, onStartFocus }: TodaysFocusProps) => {
+export const TodaysFocus = ({ tasks, onToggleTask, onStartFocus, onTaskClick }: TodaysFocusProps) => {
   const incompleteTasks = tasks.filter(t => !t.completed);
   const completedToday = tasks.filter(t => t.completed).length;
   
@@ -41,7 +42,12 @@ export const TodaysFocus = ({ tasks, onToggleTask, onStartFocus }: TodaysFocusPr
           tasks.map((task) => (
             <div
               key={task.id}
-              className="group flex items-start gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+              className="group flex items-start gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
+              onClick={(e) => {
+                // Don't trigger if clicking checkbox or button
+                if ((e.target as HTMLElement).closest('button, [role="checkbox"]')) return;
+                onTaskClick?.(task);
+              }}
             >
               <Checkbox
                 checked={task.completed}
@@ -66,6 +72,11 @@ export const TodaysFocus = ({ tasks, onToggleTask, onStartFocus }: TodaysFocusPr
                     style={{ backgroundColor: priorityColors[task.priority] }}
                     title={`${task.priority} priority`}
                   />
+                  {task.tags && task.tags.length > 0 && (
+                    <Badge variant="secondary" className="text-xs px-1.5 py-0">
+                      {task.tags[0]}
+                    </Badge>
+                  )}
                 </div>
               </div>
 
