@@ -18,7 +18,14 @@ interface AuthContextType {
   signOut: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Initialize with a default value to prevent undefined context
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  loading: true,
+  signUp: async () => ({ error: new Error('Auth not initialized') }),
+  signIn: async () => ({ error: new Error('Auth not initialized') }),
+  signOut: async () => { throw new Error('Auth not initialized'); }
+});
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -101,8 +108,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     await firebaseSignOut(auth);
   };
 
+  const value = { user, loading, signUp, signIn, signOut };
+
   return (
-    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
@@ -110,6 +119,5 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within AuthProvider');
   return context;
 };
