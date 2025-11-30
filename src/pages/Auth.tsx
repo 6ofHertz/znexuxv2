@@ -9,8 +9,7 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Mail, ShieldCheck, AlertCircle } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 
 const signInSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -32,7 +31,7 @@ type SignUpFormData = z.infer<typeof signUpSchema>;
 
 export default function Auth() {
   const [isSignUp, setIsSignUp] = useState(false);
-  const { signUp, signIn, user, loading, resendVerificationEmail } = useAuth();
+  const { signUp, signIn, user, loading } = useAuth();
   const navigate = useNavigate();
   
   const signInForm = useForm<SignInFormData>({
@@ -78,22 +77,11 @@ export default function Auth() {
       }
     } else {
       toast.success('Account created! 🎉', {
-        description: 'Please check your email to verify your account.',
+        description: 'You can now sign in to your account.',
       });
       // Switch to sign in mode
       setIsSignUp(false);
       signUpForm.reset();
-    }
-  };
-
-  const handleResendVerification = async () => {
-    const { error } = await resendVerificationEmail();
-    if (error) {
-      toast.error('Failed to send verification email');
-    } else {
-      toast.success('Verification email sent! 📧', {
-        description: 'Please check your inbox.',
-      });
     }
   };
 
@@ -106,28 +94,6 @@ export default function Auth() {
         <p className="text-center text-muted-foreground mb-8">
           {isSignUp ? 'Create your learning command center' : 'Welcome back'}
         </p>
-        
-        {/* Email Verification Notice */}
-        {user && !user.emailVerified && (
-          <Alert className="mb-6 border-amber-500/50 bg-amber-500/10">
-            <AlertCircle className="h-4 w-4 text-amber-500" />
-            <AlertDescription className="text-sm">
-              <p className="font-medium mb-2">Please verify your email</p>
-              <p className="text-xs text-muted-foreground mb-3">
-                We sent a verification link to {user.email}
-              </p>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={handleResendVerification}
-                className="gap-2"
-              >
-                <Mail className="h-3 w-3" />
-                Resend Verification Email
-              </Button>
-            </AlertDescription>
-          </Alert>
-        )}
         
         {isSignUp ? (
           <form onSubmit={signUpForm.handleSubmit(onSignUp)} className="space-y-4">
@@ -258,18 +224,6 @@ export default function Auth() {
             {isSignUp ? 'Sign In' : 'Sign Up'}
           </button>
         </p>
-        
-        {isSignUp && (
-          <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-            <div className="flex items-start gap-3">
-              <Mail className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-              <div className="text-xs text-muted-foreground space-y-1">
-                <p className="font-medium text-foreground">Email Verification Required</p>
-                <p>After signing up, you'll receive a verification email. Please verify your email address to access all features.</p>
-              </div>
-            </div>
-          </div>
-        )}
       </Card>
     </div>
   );

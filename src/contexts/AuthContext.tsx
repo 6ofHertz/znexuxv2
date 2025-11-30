@@ -5,9 +5,8 @@ import {
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
   onAuthStateChanged,
-  sendEmailVerification,
   updateProfile
-} from 'firebase/auth';
+} from '@firebase/auth';
 import { auth } from '@/lib/firebase/config';
 import { createUserProfile, updateUserProfile } from '@/lib/firebase/firestore';
 
@@ -17,7 +16,6 @@ interface AuthContextType {
   signUp: (email: string, password: string, name: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
-  resendVerificationEmail: () => Promise<{ error: any }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -70,11 +68,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       await createUserProfile(user.uid, {
         email: email,
         name: name,
-        email_verified: false
+        email_verified: user.emailVerified
       });
       
-      // Send verification email
-      await sendEmailVerification(user);
+      // NOTE: Email verification disabled - configure Firebase Console to enable
+      // await sendEmailVerification(user);
       
       return { error: null };
     } catch (error: any) {
@@ -103,21 +101,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     await firebaseSignOut(auth);
   };
 
-  const resendVerificationEmail = async () => {
-    if (!auth || !user) {
-      return { error: new Error('No user logged in') };
-    }
-    
-    try {
-      await sendEmailVerification(user);
-      return { error: null };
-    } catch (error: any) {
-      return { error };
-    }
-  };
-
   return (
-    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut, resendVerificationEmail }}>
+    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );
