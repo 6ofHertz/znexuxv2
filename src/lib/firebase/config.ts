@@ -1,8 +1,8 @@
-import { initializeApp, FirebaseApp } from '@firebase/app';
-import { getAuth, Auth } from '@firebase/auth';
-import { getStorage, FirebaseStorage } from '@firebase/storage';
-import { getFirestore, Firestore } from '@firebase/firestore';
-import { getAnalytics, Analytics } from "@firebase/analytics";
+import { initializeApp, FirebaseApp } from 'firebase/app';
+import { getAuth, Auth } from 'firebase/auth';
+import { getStorage, FirebaseStorage } from 'firebase/storage';
+import { getFirestore, Firestore, enableIndexedDbPersistence } from 'firebase/firestore';
+import { getAnalytics, Analytics } from "firebase/analytics";
 
 // Check if we have valid Firebase credentials
 const hasValidCredentials = 
@@ -37,6 +37,24 @@ if (hasValidCredentials) {
     auth = getAuth(app);
     storage = getStorage(app);
     db = getFirestore(app);
+
+    // ✅ DIRECTIVE 1: Enable Offline Persistence
+    // Allows instant read/write locally, syncs to cloud in background
+    if (db) {
+      enableIndexedDbPersistence(db)
+        .then(() => {
+          console.log('✅ Offline persistence enabled - ZURVAN works offline!');
+        })
+        .catch((err) => {
+          if (err.code === 'failed-precondition') {
+            console.warn('⚠️ Multiple tabs open, persistence enabled in first tab only');
+          } else if (err.code === 'unimplemented') {
+            console.warn('⚠️ Browser does not support offline persistence');
+          } else {
+            console.error('❌ Offline persistence error:', err);
+          }
+        });
+    }
 
     // Analytics is optional and may not be supported in all environments
     try {

@@ -5,12 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useAuth } from "@/contexts/AuthContext";
-import { createTask, getStreams, updateStream } from "@/lib/firebase/firestore";
-import { logAudit } from "@/lib/audit";
-import { toast } from "sonner";
+import { useStreams } from "@/hooks/useStreams";
+import { useTasks } from "@/hooks/useTasks";
 import { CheckSquare, Calendar } from "lucide-react";
-import type { Stream } from "@/types";
 
 interface AddTaskDialogProps {
   open: boolean;
@@ -20,10 +17,9 @@ interface AddTaskDialogProps {
 }
 
 export const AddTaskDialog = ({ open, onOpenChange, onTaskCreated, preselectedStream }: AddTaskDialogProps) => {
-  const { user } = useAuth();
+  const { streams, loading: loadingStreams } = useStreams();
+  const { addTask } = useTasks();
   const [loading, setLoading] = useState(false);
-  const [streams, setStreams] = useState<Stream[]>([]);
-  const [loadingStreams, setLoadingStreams] = useState(true);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -39,43 +35,10 @@ export const AddTaskDialog = ({ open, onOpenChange, onTaskCreated, preselectedSt
     }
   }, [preselectedStream]);
 
-  useEffect(() => {
-    const fetchStreams = async () => {
-      if (!user) return;
-      
-      try {
-        setLoadingStreams(true);
-        const streamsData = await getStreams(user.uid);
-        // Limit to first 5 streams
-        setStreams(streamsData.slice(0, 5));
-      } catch (error) {
-        console.error("Error fetching streams:", error);
-        toast.error("Failed to load streams");
-      } finally {
-        setLoadingStreams(false);
-      }
-    };
-
-    if (open) {
-      fetchStreams();
-    }
-  }, [user, open]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user) {
-      toast.error("You must be logged in to create a task");
-      return;
-    }
-
-    if (!formData.title.trim()) {
-      toast.error("Please enter a task title");
-      return;
-    }
-
-    if (!formData.stream) {
-      toast.error("Please select a learning stream");
+    if (!formData.title.trim() || !formData.stream) {
       return;
     }
 
@@ -83,12 +46,8 @@ export const AddTaskDialog = ({ open, onOpenChange, onTaskCreated, preselectedSt
 
     try {
       const taskData: any = {
-        title: formData.title.trim(),
         description: formData.description.trim() || undefined,
-        stream: formData.stream,
-        priority: formData.priority,
-        estimatedMinutes: formData.estimatedMinutes,
-        completed: false
+        estimatedMinutes: formData.estimatedMinutes
       };
 
       // Add deadline if provided
@@ -96,30 +55,12 @@ export const AddTaskDialog = ({ open, onOpenChange, onTaskCreated, preselectedSt
         taskData.deadline = new Date(formData.deadline).toISOString();
       }
 
-      await createTask(user.uid, taskData);
-
-      // Update stream's tasksRemaining count
-      const selectedStream = streams.find(s => s.id === formData.stream || s.name === formData.stream);
-      if (selectedStream) {
-        await updateStream(selectedStream.id, {
-          tasksRemaining: (selectedStream.tasksRemaining || 0) + 1,
-          lastActivityDate: new Date().toISOString()
-        });
-      }
-
-      await logAudit({
-        userId: user.uid,
-        action: 'task_created',
-        metadata: { 
-          taskTitle: formData.title,
-          stream: formData.stream,
-          priority: formData.priority
-        }
-      });
-
-      toast.success("Task created!", {
-        description: `${formData.title} has been added to ${formData.stream}`
-      });
+      await addTask(
+        formData.title.trim(),
+        formData.stream,
+        formData.priority,
+        taskData
+      );
 
       // Reset form
       setFormData({
@@ -135,9 +76,6 @@ export const AddTaskDialog = ({ open, onOpenChange, onTaskCreated, preselectedSt
       onTaskCreated?.();
     } catch (error: any) {
       console.error("Error creating task:", error);
-      toast.error("Failed to create task", {
-        description: error.message || "Please try again"
-      });
     } finally {
       setLoading(false);
     }
@@ -162,7 +100,7 @@ export const AddTaskDialog = ({ open, onOpenChange, onTaskCreated, preselectedSt
             <Label htmlFor="title">Task Title *</Label>
             <Input
               id="title"
-              placeholder="e.g., Complete Python basics module"
+              placeholder="e.g., Complete Lab 4, Study Chapter 3"
               value={formData.title}
               onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
               maxLength={200}

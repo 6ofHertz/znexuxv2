@@ -13,9 +13,9 @@ import { Calendar, BarChart3, Upload, LogOut, Shield, Sparkles, Trophy, Plus, Se
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useOnboarding } from "@/hooks/useOnboarding";
-import { getTasks, getStreams, updateTask } from "@/lib/firebase/firestore";
+import { useStreams } from "@/hooks/useStreams";
+import { useTasks } from "@/hooks/useTasks";
 import { logAudit } from "@/lib/audit";
-import type { Task, Stream } from "@/types";
 import { toast } from "sonner";
 
 const Index = () => {
@@ -23,12 +23,16 @@ const Index = () => {
   const { isAdmin } = useAdmin();
   const { shouldShowOnboarding, loading: onboardingLoading } = useOnboarding();
   const navigate = useNavigate();
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [streams, setStreams] = useState<Stream[]>([]);
-  const [dataLoading, setDataLoading] = useState(true);
+  
+  // ✅ DIRECTIVE 2 & 3: Use real-time hooks instead of manual fetching
+  const { streams, loading: streamsLoading } = useStreams();
+  const { tasks, loading: tasksLoading, toggleTask } = useTasks();
+  
   const [showAddStream, setShowAddStream] = useState(false);
   const [showAddTask, setShowAddTask] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+
+  const dataLoading = streamsLoading || tasksLoading;
 
   useEffect(() => {
     if (!loading && !user) {
@@ -43,84 +47,20 @@ const Index = () => {
     }
   }, [onboardingLoading, shouldShowOnboarding]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!user) return;
-
-      try {
-        setDataLoading(true);
-        
-        const [tasksData, streamsData] = await Promise.all([
-          getTasks(user.uid),
-          getStreams(user.uid)
-        ]);
-
-        setTasks(tasksData);
-        setStreams(streamsData);
-      } catch (error: any) {
-        console.error('Error fetching data:', error);
-        
-        // Show specific Firebase error
-        if (error.code === 'permission-denied') {
-          toast.error('Database permissions not configured. Please deploy Firestore rules first.', {
-            duration: 8000,
-            description: 'Visit Firebase Console → Firestore → Rules and deploy the security rules.'
-          });
-        } else if (error.message?.includes('index')) {
-          toast.error('Missing Firestore index. Click to create it now.', {
-            duration: 10000,
-            description: 'Your database needs an index to run queries. See DEPLOY_FIRESTORE_NOW.md for instructions.',
-            action: {
-              label: 'Create Index',
-              onClick: () => {
-                window.open('https://console.firebase.google.com/v1/r/project/znexux-954bd/firestore/indexes?create_composite=Ckxwcm9qZWN0cy96bmV4dXgtOTU0YmQvZGF0YWJhc2VzLyhkZWZhdWx0KS9jb2xsZWN0aW9uR3JvdXBzL3N0cmVhbXMvaW5kZXhlcy9fEAEaCwoHdXNlcl9pZBABGg4KCmNyZWF0ZWRfYXQQAhoMCghfX25hbWVfXxAC', '_blank');
-              }
-            }
-          });
-        } else {
-          toast.error(`Failed to load data: ${error.message || 'Unknown error'}`);
-        }
-      } finally {
-        setDataLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [user]);
-
-  const refreshData = async () => {
-    if (!user) return;
-    
-    try {
-      const [tasksData, streamsData] = await Promise.all([
-        getTasks(user.uid),
-        getStreams(user.uid)
-      ]);
-      setTasks(tasksData);
-      setStreams(streamsData);
-    } catch (error) {
-      console.error('Error refreshing data:', error);
-    }
-  };
-
   const handleToggleTask = async (taskId: string) => {
-    const task = tasks.find(t => t.id === taskId);
-    if (!task || !user) return;
+    if (!user) return;
 
     try {
-      await updateTask(taskId, { completed: !task.completed });
-
-      setTasks(tasks.map(t => (t.id === taskId ? { ...t, completed: !t.completed } : t)));
-      toast.success(task.completed ? 'Task reopened' : 'Task completed!');
+      await toggleTask(taskId);
       
       await logAudit({
         userId: user.uid,
         action: 'task_update',
-        metadata: { taskId, completed: !task.completed }
+        metadata: { taskId }
       });
     } catch (error: any) {
       console.error('Error toggling task:', error);
-      toast.error('Failed to update task');
+      // Error toast already shown by toggleTask
     }
   };
 
@@ -155,7 +95,7 @@ const Index = () => {
       acc.push(stream);
     }
     return acc;
-  }, [] as Stream[]);
+  }, [] as typeof streams);
 
   if (loading || dataLoading) {
     return (
@@ -300,7 +240,7 @@ const Index = () => {
                   <Trophy className="h-6 w-6 text-amber-500" />
                 </div>
                 <p className="text-muted-foreground text-sm">
-                  Your 5 mastery streams — displayed as trophies in your learning showcase
+                  Your mastery streams — displayed as trophies in your learning showcase
                 </p>
               </div>
 
@@ -414,12 +354,10 @@ const Index = () => {
       <AddStreamDialog 
         open={showAddStream} 
         onOpenChange={setShowAddStream}
-        onStreamCreated={refreshData}
       />
       <AddTaskDialog 
         open={showAddTask} 
         onOpenChange={setShowAddTask}
-        onTaskCreated={refreshData}
       />
     </div>
   );

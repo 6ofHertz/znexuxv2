@@ -5,10 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useAuth } from "@/contexts/AuthContext";
-import { createStream } from "@/lib/firebase/firestore";
-import { logAudit } from "@/lib/audit";
-import { toast } from "sonner";
+import { useStreams } from "@/hooks/useStreams";
 import { Sparkles } from "lucide-react";
 
 interface AddStreamDialogProps {
@@ -27,7 +24,7 @@ const streamTypes = [
 ];
 
 export const AddStreamDialog = ({ open, onOpenChange, onStreamCreated }: AddStreamDialogProps) => {
-  const { user } = useAuth();
+  const { addStream } = useStreams();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -48,37 +45,21 @@ export const AddStreamDialog = ({ open, onOpenChange, onStreamCreated }: AddStre
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user) {
-      toast.error("You must be logged in to create a stream");
-      return;
-    }
-
     if (!formData.name.trim()) {
-      toast.error("Please enter a stream name");
       return;
     }
 
     setLoading(true);
 
     try {
-      await createStream(user.uid, {
-        name: formData.name.trim(),
-        description: formData.description.trim() || undefined,
-        progress: 0,
-        color: formData.color,
-        icon: streamTypes.find(t => t.value === formData.type)?.label.split(' ')[0] || "✨",
-        tasksRemaining: 0
-      });
-
-      await logAudit({
-        userId: user.uid,
-        action: 'stream_created',
-        metadata: { streamName: formData.name }
-      });
-
-      toast.success("Learning stream created!", {
-        description: `${formData.name} has been added to your dashboard`
-      });
+      const icon = streamTypes.find(t => t.value === formData.type)?.label.split(' ')[0] || "✨";
+      
+      await addStream(
+        formData.name.trim(),
+        formData.color,
+        icon,
+        formData.description.trim() || undefined
+      );
 
       // Reset form
       setFormData({
@@ -92,9 +73,6 @@ export const AddStreamDialog = ({ open, onOpenChange, onStreamCreated }: AddStre
       onStreamCreated?.();
     } catch (error: any) {
       console.error("Error creating stream:", error);
-      toast.error("Failed to create stream", {
-        description: error.message || "Please try again"
-      });
     } finally {
       setLoading(false);
     }
@@ -136,7 +114,7 @@ export const AddStreamDialog = ({ open, onOpenChange, onStreamCreated }: AddStre
             <Label htmlFor="name">Stream Name *</Label>
             <Input
               id="name"
-              placeholder="e.g., CyberDojo Stream, AWS Certification Track"
+              placeholder="e.g., IBM Security, Red Hat Certification"
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
               maxLength={100}
